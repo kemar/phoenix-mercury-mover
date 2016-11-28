@@ -166,38 +166,22 @@ var resizeToEdge = function (direction) {
   var window = Window.focused()
   if (window) {
     var frame
+    var h = window.size().height
+    var w = window.size().width
+    var x = window.topLeft().x
+    var y = window.topLeft().y
     switch (direction) {
       case 'right':
-        frame = {
-          x: window.topLeft().x,
-          y: window.topLeft().y,
-          width: Screen.main().visibleFrame().width - window.topLeft().x,
-          height: window.size().height,
-        }
+        frame = { x: x, y: y, width: window.screen().frame().width - x, height: h }
         break
       case 'left':
-        frame = {
-          x: 0,
-          y: window.topLeft().y,
-          width: window.size().width + window.topLeft().x,
-          height: window.size().height,
-        }
+        frame = { x: 0, y: y, width: w + x, height: h }
         break
       case 'up':
-        frame = {
-          x: window.topLeft().x,
-          y: 0,
-          width: window.size().width,
-          height: window.size().height + window.topLeft().y - MENU_BAR_HEIGHT,
-        }
+        frame = { x: x, y: 0, width: w, height: h + y - MENU_BAR_HEIGHT }
         break
       case 'down':
-        frame = {
-          x: window.topLeft().x,
-          y: window.topLeft().y,
-          width: window.size().width,
-          height: Screen.main().visibleFrame().height - window.screen().visibleFrame().y,
-        }
+        frame = { x: x, y: y, width: w, height: window.screen().frame().height - y }
         break
     }
     window.setFrame(frame)
