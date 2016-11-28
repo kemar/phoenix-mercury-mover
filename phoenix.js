@@ -19,7 +19,8 @@ Phoenix.set({
 var INCREMENT_LOW = 1
 var INCREMENT_MID = 10
 var INCREMENT_HIGH = 100
-var INCREMENT_MAX = 100000000
+
+var MENU_BAR_HEIGHT = 23
 
 var shortcuts = []
 
@@ -161,6 +162,48 @@ var resize = function (increment, direction) {
   }
 }
 
+var resizeToEdge = function (direction) {
+  var window = Window.focused()
+  if (window) {
+    var frame
+    switch (direction) {
+      case 'right':
+        frame = {
+          x: window.topLeft().x,
+          y: window.topLeft().y,
+          width: Screen.main().visibleFrame().width - window.topLeft().x,
+          height: window.size().height,
+        }
+        break
+      case 'left':
+        frame = {
+          x: 0,
+          y: window.topLeft().y,
+          width: window.size().width + window.topLeft().x,
+          height: window.size().height,
+        }
+        break
+      case 'up':
+        frame = {
+          x: window.topLeft().x,
+          y: 0,
+          width: window.size().width,
+          height: window.size().height + window.topLeft().y - MENU_BAR_HEIGHT,
+        }
+        break
+      case 'down':
+        frame = {
+          x: window.topLeft().x,
+          y: window.topLeft().y,
+          width: window.size().width,
+          height: Screen.main().visibleFrame().height - window.screen().visibleFrame().y,
+        }
+        break
+    }
+    window.setFrame(frame)
+  }
+}
+
 resizeMode.addRepeatableSubShortcut('right', [], function () { resize(INCREMENT_LOW, 'right') })
 resizeMode.addRepeatableSubShortcut('left', [], function () { resize(INCREMENT_LOW, 'left') })
 resizeMode.addRepeatableSubShortcut('up', [], function () { resize(INCREMENT_LOW, 'up') })
@@ -176,10 +219,10 @@ resizeMode.addRepeatableSubShortcut('left', ['alt'], function () { resize(INCREM
 resizeMode.addRepeatableSubShortcut('up', ['alt'], function () { resize(INCREMENT_HIGH, 'up') })
 resizeMode.addRepeatableSubShortcut('down', ['alt'], function () { resize(INCREMENT_HIGH, 'down') })
 
-resizeMode.addRepeatableSubShortcut('right', ['cmd'], function () { resize(INCREMENT_MAX, 'right') })
-resizeMode.addRepeatableSubShortcut('left', ['cmd'], function () { resize(INCREMENT_MAX, 'left') })
-resizeMode.addRepeatableSubShortcut('up', ['cmd'], function () { resize(INCREMENT_MAX, 'up') })
-resizeMode.addRepeatableSubShortcut('down', ['cmd'], function () { resize(INCREMENT_MAX, 'down') })
+resizeMode.addRepeatableSubShortcut('right', ['cmd'], function () { resizeToEdge('right') })
+resizeMode.addRepeatableSubShortcut('left', ['cmd'], function () { resizeToEdge('left') })
+resizeMode.addRepeatableSubShortcut('up', ['cmd'], function () { resizeToEdge('up') })
+resizeMode.addRepeatableSubShortcut('down', ['cmd'], function () { resizeToEdge('down') })
 
 // ------------------------------------------------------------------------------
 // Move.
@@ -271,21 +314,24 @@ var center = function () {
 var customShortcut1 = function () {
   var window = Window.focused()
   if (window) {
-    window.setFrame({ x: 5, y: 27, width: 1204, height: 756 })  // Safari size/position.
+    // Safari size/position.
+    window.setFrame({ x: 4, y: MENU_BAR_HEIGHT + 4, width: 1204, height: 756 })
   }
 }
 
 var customShortcut2 = function () {
   var window = Window.focused()
   if (window) {
-    window.setFrame({ x: 5, y: 27, width: 1615, height: 1069 })  // Safari (external monitor) size/position.
+    // Safari (external monitor) size/position.
+    window.setFrame({ x: 4, y: MENU_BAR_HEIGHT + 4, width: 1615, height: 1069 })
   }
 }
 
 var customShortcut3 = function () {
   var window = Window.focused()
   if (window) {
-    window.setTopLeft({ x: 5, y: 27 })  // Terminal position.
+    // Terminal position.
+    window.setTopLeft({ x: 4, y: MENU_BAR_HEIGHT + 4 })
   }
 }
 
