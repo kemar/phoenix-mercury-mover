@@ -20,7 +20,7 @@ var INCREMENT_LOW = 1
 var INCREMENT_MID = 10
 var INCREMENT_HIGH = 100
 
-var MENU_BAR_HEIGHT = 23
+var MENU_BAR_HEIGHT = 22
 
 var shortcuts = []
 
@@ -304,10 +304,10 @@ var maximise = function () {
 var center = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = Screen.main().flippedFrame()
+    var screenFrame = Screen.main().visibleFrame()
     var x = (screenFrame.width - window.size().width) / 2
     var y = (screenFrame.height - window.size().height) / 2
-    window.setTopLeft({ x: x, y: y })
+    window.setTopLeft({ x: x, y: y + MENU_BAR_HEIGHT })
   }
 }
 
@@ -315,7 +315,7 @@ var customShortcut1 = function () {
   var window = Window.focused()
   if (window) {
     // Safari size/position.
-    window.setFrame({ x: 4, y: MENU_BAR_HEIGHT + 4, width: 1204, height: 756 })
+    window.setFrame({ x: 5, y: 5 + MENU_BAR_HEIGHT, width: 1204, height: 756 })
   }
 }
 
@@ -323,7 +323,7 @@ var customShortcut2 = function () {
   var window = Window.focused()
   if (window) {
     // Safari (external monitor) size/position.
-    window.setFrame({ x: 4, y: MENU_BAR_HEIGHT + 4, width: 1615, height: 1069 })
+    window.setFrame({ x: 5, y: 5 + MENU_BAR_HEIGHT, width: 1615, height: 1069 })
   }
 }
 
@@ -331,7 +331,7 @@ var customShortcut3 = function () {
   var window = Window.focused()
   if (window) {
     // Terminal position.
-    window.setTopLeft({ x: 4, y: MENU_BAR_HEIGHT + 4 })
+    window.setTopLeft({ x: 5, y: 5 + MENU_BAR_HEIGHT })
   }
 }
 
