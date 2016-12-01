@@ -28,14 +28,7 @@ var shortcuts = []
 // Shortcut constructor.
 
 var Shortcut = function (key, modifiers, modalText) {
-  this.modal = Modal.build({
-    text: modalText,
-    weight: 16,
-  })
-  this.modal.origin = {
-    x: (Screen.main().flippedFrame().width - this.modal.frame().width) / 2,
-    y: (Screen.main().flippedFrame().height - this.modal.frame().height) / 2,
-  }
+  this.modal = Modal.build({ text: modalText, weight: 16 })
   this.oneTimeSubShortcuts = []
   this.repeatableSubShortcuts = []
   this.subShortcuts = []
@@ -43,21 +36,40 @@ var Shortcut = function (key, modifiers, modalText) {
   var self = this
   this.key = new Key(key, modifiers, function () {
     self.enableSubShortcuts()
-    self.modal.show()
+    self.handleModal()
   })
+}
+
+Shortcut.prototype.handleModal = function () {
+
+  var self = this
+
+  // Close any previously opened modal.
+  // This is necessary because we have several main shortcuts and hitting
+  // them in a consecutive manner would result in multiple opened modals.
+  shortcuts.forEach(function (shortcut) {
+    if (shortcut !== self && shortcut.modal) {
+      shortcut.modal.close()
+    }
+  })
+
+  // Center the current modal on the current screen.
+  var screenFrame = Screen.main().frame()
+  var modalFrame = self.modal.frame()
+  self.modal.origin = {
+    x: screenFrame.x + ((screenFrame.width - modalFrame.width) / 2),
+    y: screenFrame.y + ((screenFrame.height - modalFrame.height) / 2),
+  }
+
+  self.modal.show()
+
 }
 
 Shortcut.prototype.enableSubShortcuts = function () {
 
-  this.disableSubShortcuts()
   var self = this
 
-  // Close any previously opened modal except the current one.
-  shortcuts.forEach(function (shortcut) {
-    if (shortcut !== self) {
-      shortcut.modal.close()
-    }
-  })
+  this.disableSubShortcuts()
 
   // One time sub-shortcuts: the modal will be dismissed immediately after a one time shortcut is hit.
   this.oneTimeSubShortcuts.forEach(function (x) {
@@ -166,22 +178,39 @@ var resizeToEdge = function (direction) {
   var window = Window.focused()
   if (window) {
     var frame
-    var h = window.size().height
-    var w = window.size().width
-    var x = window.topLeft().x
-    var y = window.topLeft().y
+    var screenFrame = window.screen().flippedFrame()
     switch (direction) {
       case 'right':
-        frame = { x: x, y: y, width: window.screen().frame().width - x, height: h }
+        frame = {
+          x: window.topLeft().x,
+          y: window.topLeft().y,
+          width: screenFrame.width - Math.abs(screenFrame.x - window.topLeft().x),
+          height: window.size().height,
+        }
         break
       case 'left':
-        frame = { x: 0, y: y, width: w + x, height: h }
+        frame = {
+          x: screenFrame.x,
+          y: window.topLeft().y,
+          width: Math.abs(screenFrame.x - window.topLeft().x) + window.size().width,
+          height: window.size().height,
+        }
         break
       case 'up':
-        frame = { x: x, y: 0, width: w, height: h + y - MENU_BAR_HEIGHT }
+        frame = {
+          x: window.topLeft().x,
+          y: screenFrame.y,
+          width: window.size().width,
+          height: Math.abs(screenFrame.y - window.topLeft().y) + window.size().height - MENU_BAR_HEIGHT - 1,
+        }
         break
       case 'down':
-        frame = { x: x, y: y, width: w, height: window.screen().frame().height - y }
+        frame = {
+          x: window.topLeft().x,
+          y: window.topLeft().y,
+          width: window.size().width,
+          height: screenFrame.height - Math.abs(screenFrame.y - window.topLeft().y),
+        }
         break
     }
     window.setFrame(frame)
@@ -237,18 +266,31 @@ var moveToEdge = function (direction) {
   var window = Window.focused()
   if (window) {
     var coords
+    var screenFrame = window.screen().flippedFrame()
     switch (direction) {
       case 'right':
-        coords = { x: Screen.main().flippedFrame().width - window.size().width, y: window.topLeft().y }
+        coords = {
+          x: screenFrame.x + screenFrame.width - window.size().width,
+          y: window.topLeft().y,
+        }
         break
       case 'left':
-        coords = { x: 0, y: window.topLeft().y }
+        coords = {
+          x: screenFrame.x,
+          y: window.topLeft().y,
+        }
         break
       case 'up':
-        coords = { x: window.topLeft().x, y: 0 }
+        coords = {
+          x: window.topLeft().x,
+          y: screenFrame.y,
+        }
         break
       case 'down':
-        coords = { x: window.topLeft().x, y: Screen.main().flippedFrame().height - window.size().height }
+        coords = {
+          x: window.topLeft().x,
+          y: screenFrame.y + screenFrame.height - window.size().height,
+        }
         break
     }
     window.setTopLeft(coords)
@@ -288,9 +330,9 @@ var maximise = function () {
 var center = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = Screen.main().visibleFrame()
-    var x = (screenFrame.width - window.size().width) / 2
-    var y = (screenFrame.height - window.size().height) / 2
+    var screenFrame = window.screen().flippedFrame()
+    var x = screenFrame.x + ((screenFrame.width - window.size().width) / 2)
+    var y = screenFrame.y + ((screenFrame.height - window.size().height) / 2)
     window.setTopLeft({ x: x, y: y + MENU_BAR_HEIGHT })
   }
 }
