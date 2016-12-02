@@ -201,7 +201,7 @@ var resizeToEdge = function (direction) {
           x: window.topLeft().x,
           y: screenFrame.y,
           width: window.size().width,
-          height: Math.abs(screenFrame.y - window.topLeft().y) + window.size().height - MENU_BAR_HEIGHT - 1,
+          height: Math.abs(window.screen().flippedVisibleFrame().y - window.topLeft().y) + window.size().height,
         }
         break
       case 'down':
