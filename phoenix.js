@@ -22,33 +22,33 @@ var INCREMENT_HIGH = 100
 
 var MENU_BAR_HEIGHT = 22
 
-var shortcuts = []
+var mainShortcuts = []
 
 // ------------------------------------------------------------------------------
 // Shortcut constructor.
 
 var Shortcut = function (key, modifiers, modalText) {
   this.modal = Modal.build({ text: modalText, weight: 16 })
-  this.oneTimeSubShortcuts = []
-  this.repeatableSubShortcuts = []
   this.subShortcuts = []
-  shortcuts.push(this)
+  this.keys = []
+  mainShortcuts.push(this)
   var self = this
   this.key = new Key(key, modifiers, function () {
+    self.disableSubShortcuts()
     self.enableSubShortcuts()
-    self.handleModal()
+    self.showModal()
   })
 }
 
-Shortcut.prototype.handleModal = function () {
+Shortcut.prototype.showModal = function () {
 
   var self = this
 
   // Close any previously opened modal.
   // This is necessary because we have several main shortcuts and hitting
   // them in a consecutive manner would result in multiple opened modals.
-  shortcuts.forEach(function (shortcut) {
-    if (shortcut !== self && shortcut.modal) {
+  mainShortcuts.forEach(function (shortcut) {
+    if (shortcut !== self) {
       shortcut.modal.close()
     }
   })
@@ -69,49 +69,36 @@ Shortcut.prototype.enableSubShortcuts = function () {
 
   var self = this
 
-  this.disableSubShortcuts()
-
-  // One time sub-shortcuts: the modal will be dismissed immediately after a one time shortcut is hit.
-  this.oneTimeSubShortcuts.forEach(function (x) {
-    var shortcut = new Key(x.key, x.modifiers, function () {
-      x.cb()
-      self.modal.close()
-      self.disableSubShortcuts()
-    })
-    shortcut.enable()
-    self.subShortcuts.push(shortcut)
+  var closeKey = new Key('escape', [], function () {
+    self.modal.close()
+    self.disableSubShortcuts()
   })
+  closeKey.enable()
+  self.keys.push(closeKey)
 
-  // Repeatable sub-shortcuts: the modal will not be dismissed until a one time shortcut is hit.
-  this.repeatableSubShortcuts.forEach(function (x) {
-    var shortcut = new Key(x.key, x.modifiers, function () {
-      x.cb()
-    })
-    shortcut.enable()
-    self.subShortcuts.push(shortcut)
+  this.subShortcuts.forEach(function (x) {
+    var key = new Key(x.key, x.modifiers, x.cb)
+    key.enable()
+    self.keys.push(key)
   })
 
 }
 
 Shortcut.prototype.disableSubShortcuts = function () {
-  this.subShortcuts.forEach(function (shortcut) {
-    shortcut.disable()
+  this.keys.forEach(function (key) {
+    key.disable()
   })
-  this.subShortcuts = []
+  this.keys = []
 }
 
-Shortcut.prototype.addOneTimeSubShortcut = function (key, modifiers, cb) {
-  this.oneTimeSubShortcuts.push({key: key, modifiers: modifiers, cb: cb})
-}
-
-Shortcut.prototype.addRepeatableSubShortcut = function (key, modifiers, cb) {
-  this.repeatableSubShortcuts.push({key: key, modifiers: modifiers, cb: cb})
+Shortcut.prototype.addSubShortcut = function (key, modifiers, cb) {
+  this.subShortcuts.push({key: key, modifiers: modifiers, cb: cb})
 }
 
 // ------------------------------------------------------------------------------
-// Main shortcuts to activate move or resize mode.
+// Main shortcuts to activate `move` or `resize` mode.
 
-var arrow = [
+var arrows = [
   '\n',
   '↑\n',
   '←    →\n',
@@ -125,7 +112,7 @@ var moveMode = new Shortcut(
   ['shift', 'ctrl', 'alt'],
   [
     'MOVE\n',
-    arrow,
+    arrows,
     'Hit esc to dismiss\n',
     'Use no modifier key to move ' + INCREMENT_LOW + ' pixel.\n',
     'Use the shift key to move ' + INCREMENT_MID + ' pixels.\n',
@@ -134,13 +121,13 @@ var moveMode = new Shortcut(
   ].join('')
 )
 
-// Resize right/down mode.
+// Resize mode (from right/down).
 var resizeMode = new Shortcut(
   'right',
   ['shift', 'ctrl', 'alt'],
   [
     'RESIZE\n',
-    arrow,
+    arrows,
     'Hit esc to dismiss\n',
     'Use no modifier key to resize ' + INCREMENT_LOW + ' pixel.\n',
     'Use the shift key to resize ' + INCREMENT_MID + ' pixels.\n',
@@ -217,25 +204,25 @@ var resizeToEdge = function (direction) {
   }
 }
 
-resizeMode.addRepeatableSubShortcut('right', [], function () { resize(INCREMENT_LOW, 'right') })
-resizeMode.addRepeatableSubShortcut('left', [], function () { resize(INCREMENT_LOW, 'left') })
-resizeMode.addRepeatableSubShortcut('up', [], function () { resize(INCREMENT_LOW, 'up') })
-resizeMode.addRepeatableSubShortcut('down', [], function () { resize(INCREMENT_LOW, 'down') })
+resizeMode.addSubShortcut('right', [], function () { resize(INCREMENT_LOW, 'right') })
+resizeMode.addSubShortcut('left', [], function () { resize(INCREMENT_LOW, 'left') })
+resizeMode.addSubShortcut('up', [], function () { resize(INCREMENT_LOW, 'up') })
+resizeMode.addSubShortcut('down', [], function () { resize(INCREMENT_LOW, 'down') })
 
-resizeMode.addRepeatableSubShortcut('right', ['shift'], function () { resize(INCREMENT_MID, 'right') })
-resizeMode.addRepeatableSubShortcut('left', ['shift'], function () { resize(INCREMENT_MID, 'left') })
-resizeMode.addRepeatableSubShortcut('up', ['shift'], function () { resize(INCREMENT_MID, 'up') })
-resizeMode.addRepeatableSubShortcut('down', ['shift'], function () { resize(INCREMENT_MID, 'down') })
+resizeMode.addSubShortcut('right', ['shift'], function () { resize(INCREMENT_MID, 'right') })
+resizeMode.addSubShortcut('left', ['shift'], function () { resize(INCREMENT_MID, 'left') })
+resizeMode.addSubShortcut('up', ['shift'], function () { resize(INCREMENT_MID, 'up') })
+resizeMode.addSubShortcut('down', ['shift'], function () { resize(INCREMENT_MID, 'down') })
 
-resizeMode.addRepeatableSubShortcut('right', ['alt'], function () { resize(INCREMENT_HIGH, 'right') })
-resizeMode.addRepeatableSubShortcut('left', ['alt'], function () { resize(INCREMENT_HIGH, 'left') })
-resizeMode.addRepeatableSubShortcut('up', ['alt'], function () { resize(INCREMENT_HIGH, 'up') })
-resizeMode.addRepeatableSubShortcut('down', ['alt'], function () { resize(INCREMENT_HIGH, 'down') })
+resizeMode.addSubShortcut('right', ['alt'], function () { resize(INCREMENT_HIGH, 'right') })
+resizeMode.addSubShortcut('left', ['alt'], function () { resize(INCREMENT_HIGH, 'left') })
+resizeMode.addSubShortcut('up', ['alt'], function () { resize(INCREMENT_HIGH, 'up') })
+resizeMode.addSubShortcut('down', ['alt'], function () { resize(INCREMENT_HIGH, 'down') })
 
-resizeMode.addRepeatableSubShortcut('right', ['cmd'], function () { resizeToEdge('right') })
-resizeMode.addRepeatableSubShortcut('left', ['cmd'], function () { resizeToEdge('left') })
-resizeMode.addRepeatableSubShortcut('up', ['cmd'], function () { resizeToEdge('up') })
-resizeMode.addRepeatableSubShortcut('down', ['cmd'], function () { resizeToEdge('down') })
+resizeMode.addSubShortcut('right', ['cmd'], function () { resizeToEdge('right') })
+resizeMode.addSubShortcut('left', ['cmd'], function () { resizeToEdge('left') })
+resizeMode.addSubShortcut('up', ['cmd'], function () { resizeToEdge('up') })
+resizeMode.addSubShortcut('down', ['cmd'], function () { resizeToEdge('down') })
 
 // ------------------------------------------------------------------------------
 // Move.
@@ -297,25 +284,25 @@ var moveToEdge = function (direction) {
   }
 }
 
-moveMode.addRepeatableSubShortcut('right', [], function () { move(INCREMENT_LOW, 'right') })
-moveMode.addRepeatableSubShortcut('left', [], function () { move(INCREMENT_LOW, 'left') })
-moveMode.addRepeatableSubShortcut('up', [], function () { move(INCREMENT_LOW, 'up') })
-moveMode.addRepeatableSubShortcut('down', [], function () { move(INCREMENT_LOW, 'down') })
+moveMode.addSubShortcut('right', [], function () { move(INCREMENT_LOW, 'right') })
+moveMode.addSubShortcut('left', [], function () { move(INCREMENT_LOW, 'left') })
+moveMode.addSubShortcut('up', [], function () { move(INCREMENT_LOW, 'up') })
+moveMode.addSubShortcut('down', [], function () { move(INCREMENT_LOW, 'down') })
 
-moveMode.addRepeatableSubShortcut('right', ['shift'], function () { move(INCREMENT_MID, 'right') })
-moveMode.addRepeatableSubShortcut('left', ['shift'], function () { move(INCREMENT_MID, 'left') })
-moveMode.addRepeatableSubShortcut('up', ['shift'], function () { move(INCREMENT_MID, 'up') })
-moveMode.addRepeatableSubShortcut('down', ['shift'], function () { move(INCREMENT_MID, 'down') })
+moveMode.addSubShortcut('right', ['shift'], function () { move(INCREMENT_MID, 'right') })
+moveMode.addSubShortcut('left', ['shift'], function () { move(INCREMENT_MID, 'left') })
+moveMode.addSubShortcut('up', ['shift'], function () { move(INCREMENT_MID, 'up') })
+moveMode.addSubShortcut('down', ['shift'], function () { move(INCREMENT_MID, 'down') })
 
-moveMode.addRepeatableSubShortcut('right', ['alt'], function () { move(INCREMENT_HIGH, 'right') })
-moveMode.addRepeatableSubShortcut('left', ['alt'], function () { move(INCREMENT_HIGH, 'left') })
-moveMode.addRepeatableSubShortcut('up', ['alt'], function () { move(INCREMENT_HIGH, 'up') })
-moveMode.addRepeatableSubShortcut('down', ['alt'], function () { move(INCREMENT_HIGH, 'down') })
+moveMode.addSubShortcut('right', ['alt'], function () { move(INCREMENT_HIGH, 'right') })
+moveMode.addSubShortcut('left', ['alt'], function () { move(INCREMENT_HIGH, 'left') })
+moveMode.addSubShortcut('up', ['alt'], function () { move(INCREMENT_HIGH, 'up') })
+moveMode.addSubShortcut('down', ['alt'], function () { move(INCREMENT_HIGH, 'down') })
 
-moveMode.addRepeatableSubShortcut('right', ['cmd'], function () { moveToEdge('right') })
-moveMode.addRepeatableSubShortcut('left', ['cmd'], function () { moveToEdge('left') })
-moveMode.addRepeatableSubShortcut('up', ['cmd'], function () { moveToEdge('up') })
-moveMode.addRepeatableSubShortcut('down', ['cmd'], function () { moveToEdge('down') })
+moveMode.addSubShortcut('right', ['cmd'], function () { moveToEdge('right') })
+moveMode.addSubShortcut('left', ['cmd'], function () { moveToEdge('left') })
+moveMode.addSubShortcut('up', ['cmd'], function () { moveToEdge('up') })
+moveMode.addSubShortcut('down', ['cmd'], function () { moveToEdge('down') })
 
 // ------------------------------------------------------------------------------
 // Custom size/position shortcuts.
@@ -330,7 +317,7 @@ var maximise = function () {
 var center = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = window.screen().flippedFrame()
+    var screenFrame = window.screen().flippedVisibleFrame()
     window.setTopLeft({
       x: parseInt(screenFrame.x + ((screenFrame.width - window.size().width) / 2)),
       y: parseInt(screenFrame.y + ((screenFrame.height - window.size().height) / 2)),
@@ -338,6 +325,7 @@ var center = function () {
   }
 }
 
+// Move and resize the window to the left half of the screen.
 var half = function () {
   var window = Window.focused()
   if (window) {
@@ -351,46 +339,40 @@ var half = function () {
   }
 }
 
+// Safari size/position.
 var customShortcut1 = function () {
   var window = Window.focused()
   if (window) {
-    // Safari size/position.
     window.setFrame({ x: 5, y: 5 + MENU_BAR_HEIGHT, width: 1204, height: 756 })
   }
 }
 
+// Safari (external monitor) size/position.
 var customShortcut2 = function () {
   var window = Window.focused()
   if (window) {
-    // Safari (external monitor) size/position.
     window.setFrame({ x: 5, y: 5 + MENU_BAR_HEIGHT, width: 1615, height: 1069 })
   }
 }
 
+// Terminal position.
 var customShortcut3 = function () {
   var window = Window.focused()
   if (window) {
-    // Terminal position.
     window.setTopLeft({ x: 5, y: 5 + MENU_BAR_HEIGHT })
   }
 }
 
-var dismiss = function () {
-  return true
-}
+resizeMode.addSubShortcut('m', [], maximise)
+resizeMode.addSubShortcut('=', [], center)
+resizeMode.addSubShortcut('h', [], half)
+resizeMode.addSubShortcut('s', [], customShortcut1)
+resizeMode.addSubShortcut('f', [], customShortcut2)
+resizeMode.addSubShortcut('t', [], customShortcut3)
 
-resizeMode.addOneTimeSubShortcut('m', [], maximise)
-resizeMode.addOneTimeSubShortcut('=', [], center)
-resizeMode.addOneTimeSubShortcut('h', [], half)
-resizeMode.addOneTimeSubShortcut('s', [], customShortcut1)
-resizeMode.addOneTimeSubShortcut('f', [], customShortcut2)
-resizeMode.addOneTimeSubShortcut('t', [], customShortcut3)
-resizeMode.addOneTimeSubShortcut('escape', [], dismiss)
-
-moveMode.addOneTimeSubShortcut('m', [], maximise)
-moveMode.addOneTimeSubShortcut('=', [], center)
-moveMode.addOneTimeSubShortcut('h', [], half)
-moveMode.addOneTimeSubShortcut('s', [], customShortcut1)
-moveMode.addOneTimeSubShortcut('f', [], customShortcut2)
-moveMode.addOneTimeSubShortcut('t', [], customShortcut3)
-moveMode.addOneTimeSubShortcut('escape', [], dismiss)
+moveMode.addSubShortcut('m', [], maximise)
+moveMode.addSubShortcut('=', [], center)
+moveMode.addSubShortcut('h', [], half)
+moveMode.addSubShortcut('s', [], customShortcut1)
+moveMode.addSubShortcut('f', [], customShortcut2)
+moveMode.addSubShortcut('t', [], customShortcut3)
