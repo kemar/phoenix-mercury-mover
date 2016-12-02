@@ -338,6 +338,19 @@ var center = function () {
   }
 }
 
+var half = function () {
+  var window = Window.focused()
+  if (window) {
+    var screenFrame = window.screen().flippedFrame()
+    window.setFrame({
+      x: screenFrame.x,
+      y: screenFrame.y,
+      width: parseInt(screenFrame.width / 2),
+      height: screenFrame.height,
+    })
+  }
+}
+
 var customShortcut1 = function () {
   var window = Window.focused()
   if (window) {
@@ -368,6 +381,7 @@ var dismiss = function () {
 
 resizeMode.addOneTimeSubShortcut('m', [], maximise)
 resizeMode.addOneTimeSubShortcut('=', [], center)
+resizeMode.addOneTimeSubShortcut('h', [], half)
 resizeMode.addOneTimeSubShortcut('s', [], customShortcut1)
 resizeMode.addOneTimeSubShortcut('f', [], customShortcut2)
 resizeMode.addOneTimeSubShortcut('t', [], customShortcut3)
@@ -375,6 +389,7 @@ resizeMode.addOneTimeSubShortcut('escape', [], dismiss)
 
 moveMode.addOneTimeSubShortcut('m', [], maximise)
 moveMode.addOneTimeSubShortcut('=', [], center)
+moveMode.addOneTimeSubShortcut('h', [], half)
 moveMode.addOneTimeSubShortcut('s', [], customShortcut1)
 moveMode.addOneTimeSubShortcut('f', [], customShortcut2)
 moveMode.addOneTimeSubShortcut('t', [], customShortcut3)

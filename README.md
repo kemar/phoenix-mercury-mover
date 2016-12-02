@@ -22,6 +22,7 @@ Once a popup is shown, you can hit some keys to move the frontmost window to a p
 
 - `m` to maximise the window
 - `=` to center the window
+- `h` to move and resize the window to the left half of the screen
 - `esc` to dismiss the popup
 
 I also included 3 personal custom shortcuts which are heavily dependent on my current screen resolutions and sizes:
