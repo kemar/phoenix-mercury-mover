@@ -2,6 +2,9 @@
   "name": "phoenix-mercury-mover",
   "author": "Kemar",
   "license": "MIT",
+  "scripts": {
+    "lint": "eslint phoenix.js"
+  },
   "devDependencies": {
     "eslint": "^3.10.2",
     "eslint-config-standard": "^6.2.1",
