@@ -339,6 +339,18 @@ var half = function () {
   }
 }
 
+resizeMode.addSubShortcut('m', [], maximise)
+resizeMode.addSubShortcut('=', [], center)
+resizeMode.addSubShortcut('h', [], half)
+
+moveMode.addSubShortcut('m', [], maximise)
+moveMode.addSubShortcut('=', [], center)
+moveMode.addSubShortcut('h', [], half)
+
+// ------------------------------------------------------------------------------
+// The following are personal custom shortcuts which are heavily dependent
+// on my current screen resolutions and sizes.
+
 // Safari size/position.
 var customShortcut1 = function () {
   var window = Window.focused()
@@ -363,16 +375,10 @@ var customShortcut3 = function () {
   }
 }
 
-resizeMode.addSubShortcut('m', [], maximise)
-resizeMode.addSubShortcut('=', [], center)
-resizeMode.addSubShortcut('h', [], half)
 resizeMode.addSubShortcut('s', [], customShortcut1)
 resizeMode.addSubShortcut('f', [], customShortcut2)
 resizeMode.addSubShortcut('t', [], customShortcut3)
 
-moveMode.addSubShortcut('m', [], maximise)
-moveMode.addSubShortcut('=', [], center)
-moveMode.addSubShortcut('h', [], half)
 moveMode.addSubShortcut('s', [], customShortcut1)
 moveMode.addSubShortcut('f', [], customShortcut2)
 moveMode.addSubShortcut('t', [], customShortcut3)

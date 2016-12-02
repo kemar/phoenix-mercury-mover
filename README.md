@@ -28,14 +28,6 @@ Additionally you can hit some keys while the popup is shown to move the frontmos
 
 Hit `esc` to dismiss the popup.
 
-I also included 3 personal custom shortcuts which are heavily dependent on my current screen resolutions and sizes:
-
-- `s` => `x: 5, y: 27, width: 1204, height: 756`
-
-- `f` => `x: 5, y: 27, width: 1615, height: 1069`
-
-- `t` => `x: 5, y: 27`
-
 ## Acknowledgements
 
 Released under the [MIT License](http://opensource.org/licenses/mit-license).
