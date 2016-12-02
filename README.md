@@ -28,6 +28,8 @@ Additionally you can hit some keys while the popup is shown to move the frontmos
 
 Hit `esc` to dismiss the popup.
 
+![Demo](demo.gif)
+
 ## Acknowledgements
 
 Released under the [MIT License](http://opensource.org/licenses/mit-license).
