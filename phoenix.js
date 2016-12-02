@@ -331,9 +331,10 @@ var center = function () {
   var window = Window.focused()
   if (window) {
     var screenFrame = window.screen().flippedFrame()
-    var x = screenFrame.x + ((screenFrame.width - window.size().width) / 2)
-    var y = screenFrame.y + ((screenFrame.height - window.size().height) / 2)
-    window.setTopLeft({ x: x, y: y + MENU_BAR_HEIGHT })
+    window.setTopLeft({
+      x: parseInt(screenFrame.x + ((screenFrame.width - window.size().width) / 2)),
+      y: parseInt(screenFrame.y + ((screenFrame.height - window.size().height) / 2)),
+    })
   }
 }
 
