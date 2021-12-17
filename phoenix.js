@@ -20,7 +20,7 @@ var INCREMENT_LOW = 1
 var INCREMENT_MID = 10
 var INCREMENT_HIGH = 100
 
-var MENU_BAR_HEIGHT = 22
+var EXTRA_SPACE = 4
 
 var mainShortcuts = []
 
@@ -355,8 +355,13 @@ moveMode.addSubShortcut('h', [], half)
 var customShortcut1 = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = window.screen().flippedFrame()
-    window.setFrame({ x: screenFrame.x + 5, y: screenFrame.y + 5 + MENU_BAR_HEIGHT, width: 1304, height: 820 })
+    var screenFrame = window.screen().flippedVisibleFrame()
+    window.setFrame({
+      x: screenFrame.x + EXTRA_SPACE,
+      y: screenFrame.y + EXTRA_SPACE,
+      width: 1400,
+      height: 900,
+    })
   }
 }
 
@@ -364,8 +369,13 @@ var customShortcut1 = function () {
 var customShortcut2 = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = window.screen().flippedFrame()
-    window.setFrame({ x: screenFrame.x + 5, y: screenFrame.y + 5 + MENU_BAR_HEIGHT, width: 2200, height: 1400 })
+    var screenFrame = window.screen().flippedVisibleFrame()
+    window.setFrame({
+      x: screenFrame.x + EXTRA_SPACE,
+      y: screenFrame.y + EXTRA_SPACE,
+      width: 2200,
+      height: 1400,
+    })
   }
 }
 
@@ -373,8 +383,11 @@ var customShortcut2 = function () {
 var customShortcut3 = function () {
   var window = Window.focused()
   if (window) {
-    var screenFrame = window.screen().flippedFrame()
-    window.setTopLeft({ x: screenFrame.x + 5, y: screenFrame.y + 5 + MENU_BAR_HEIGHT })
+    var screenFrame = window.screen().flippedVisibleFrame()
+    window.setTopLeft({
+      x: screenFrame.x + EXTRA_SPACE,
+      y: screenFrame.y + EXTRA_SPACE,
+    })
   }
 }
 
