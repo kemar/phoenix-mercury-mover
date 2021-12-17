@@ -20,7 +20,7 @@ var INCREMENT_LOW = 1
 var INCREMENT_MID = 10
 var INCREMENT_HIGH = 100
 
-var EXTRA_SPACE = 4
+var EXTRA_SPACE = 2
 
 var mainShortcuts = []
 
