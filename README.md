@@ -2,7 +2,7 @@
 
 My [Phoenix](https://github.com/kasper/phoenix/) config.
 
-I upgraded to macOS Sierra and [MercuryMover](http://www.heliumfoot.com/mercurymover/) stopped working. So I implemented some of its functionalities with Phoenix.
+When I upgraded to macOS Sierra, [MercuryMover](http://www.heliumfoot.com/mercurymover/) stopped working. So I implemented some of its functionalities with Phoenix.
 
 ## Presentation
 
