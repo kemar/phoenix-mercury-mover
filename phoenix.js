@@ -28,7 +28,7 @@ var mainShortcuts = []
 // Shortcut constructor.
 
 var Shortcut = function (key, modifiers, modalText) {
-  this.modal = Modal.build({ text: modalText, weight: 16 })
+  this.modal = Modal.build({ text: modalText, weight: 16, textAlignment: 'center' })
   this.subShortcuts = []
   this.keys = []
   mainShortcuts.push(this)
