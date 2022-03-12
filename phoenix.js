@@ -28,7 +28,7 @@ var mainShortcuts = []
 // Shortcut constructor.
 
 var Shortcut = function (key, modifiers, modalText) {
-  this.modal = Modal.build({ text: modalText, weight: 16, textAlignment: 'center' })
+  this.modal = Modal.build({ text: modalText, weight: 16, textAlignment: 'center', appearance: 'light' })
   this.subShortcuts = []
   this.keys = []
   mainShortcuts.push(this)
@@ -117,7 +117,7 @@ var moveMode = new Shortcut(
     'Use no modifier key to move ' + INCREMENT_LOW + ' pixel.\n',
     'Use the shift key to move ' + INCREMENT_MID + ' pixels.\n',
     'Use the option key to move ' + INCREMENT_HIGH + ' pixels.\n',
-    'Use the cmd key to move to the edge of the screen.\n',
+    'Use the cmd key to move to the edge of the screen.',
   ].join('')
 )
 
@@ -132,7 +132,7 @@ var resizeMode = new Shortcut(
     'Use no modifier key to resize ' + INCREMENT_LOW + ' pixel.\n',
     'Use the shift key to resize ' + INCREMENT_MID + ' pixels.\n',
     'Use the option key to resize ' + INCREMENT_HIGH + ' pixels.\n',
-    'Use the cmd key to resize to the edge of the screen.\n',
+    'Use the cmd key to resize to the edge of the screen.',
   ].join('')
 )
 
