@@ -16,385 +16,259 @@ Phoenix.set({
 // ------------------------------------------------------------------------------
 // Const and globals.
 
-var INCREMENT_LOW = 1
-var INCREMENT_MID = 10
-var INCREMENT_HIGH = 100
+const INCREMENT_LOW = 1
+const INCREMENT_MID = 10
+const INCREMENT_HIGH = 100
 
-var EXTRA_SPACE = 2
+const EXTRA_SPACE = 2
 
-var mainShortcuts = []
+const DIRECTIONS = ['right', 'left', 'up', 'down']
+
+// The axis and sign each direction moves/grows along.
+const AXES = { right: 'x', left: 'x', up: 'y', down: 'y' }
+const SIGNS = { right: 1, left: -1, up: -1, down: 1 }
+const DIMENSIONS = { x: 'width', y: 'height' }
+
+const mainShortcuts = []
+
+// Calls `fn` with the focused window, skipping the call entirely when there is none.
+const withFocusedWindow = (fn) => (...args) => {
+  const window = Window.focused()
+  if (window) fn(window, ...args)
+}
 
 // ------------------------------------------------------------------------------
-// Shortcut constructor.
+// Shortcut class.
 
-var Shortcut = function (key, modifiers, modalText) {
-  this.modal = Modal.build({ text: modalText, weight: 16, textAlignment: 'center', appearance: 'light' })
-  this.subShortcuts = []
-  this.keys = []
-  mainShortcuts.push(this)
-  var self = this
-  this.key = new Key(key, modifiers, function () {
-    self.disableSubShortcuts()
-    self.enableSubShortcuts()
-    self.showModal()
-  })
-}
-
-Shortcut.prototype.showModal = function () {
-
-  var self = this
-
-  // Close any previously opened modal.
-  // This is necessary because we have several main shortcuts and hitting
-  // them in a consecutive manner would result in multiple opened modals.
-  mainShortcuts.forEach(function (shortcut) {
-    if (shortcut !== self) {
-      shortcut.modal.close()
-    }
-  })
-
-  // Center the current modal on the current screen.
-  var screenFrame = Screen.main().frame()
-  var modalFrame = self.modal.frame()
-  self.modal.origin = {
-    x: screenFrame.x + ((screenFrame.width - modalFrame.width) / 2),
-    y: screenFrame.y + ((screenFrame.height - modalFrame.height) / 2),
+class Shortcut {
+  constructor(key, modifiers, modalText) {
+    this.modal = Modal.build({ text: modalText, weight: 16, textAlignment: 'center', appearance: 'light' })
+    this.subShortcuts = []
+    this.keys = []
+    mainShortcuts.push(this)
+    this.key = new Key(key, modifiers, () => {
+      this.disableSubShortcuts()
+      this.enableSubShortcuts()
+      this.showModal()
+    })
   }
 
-  self.modal.show()
+  showModal() {
+    // Close any previously opened modal.
+    // This is necessary because we have several main shortcuts and hitting
+    // them in a consecutive manner would result in multiple opened modals.
+    mainShortcuts.forEach((shortcut) => {
+      if (shortcut !== this) {
+        shortcut.modal.close()
+      }
+    })
 
-}
+    // Center the current modal on the current screen.
+    const screenFrame = Screen.main().frame()
+    const modalFrame = this.modal.frame()
+    this.modal.origin = {
+      x: screenFrame.x + (screenFrame.width - modalFrame.width) / 2,
+      y: screenFrame.y + (screenFrame.height - modalFrame.height) / 2,
+    }
 
-Shortcut.prototype.enableSubShortcuts = function () {
+    this.modal.show()
+  }
 
-  var self = this
+  enableSubShortcuts() {
+    const closeKey = new Key('escape', [], () => {
+      this.modal.close()
+      this.disableSubShortcuts()
+    })
+    closeKey.enable()
+    this.keys.push(closeKey)
 
-  var closeKey = new Key('escape', [], function () {
-    self.modal.close()
-    self.disableSubShortcuts()
-  })
-  closeKey.enable()
-  self.keys.push(closeKey)
+    this.subShortcuts.forEach(({ key, modifiers, cb }) => {
+      const subKey = new Key(key, modifiers, cb)
+      subKey.enable()
+      this.keys.push(subKey)
+    })
+  }
 
-  this.subShortcuts.forEach(function (x) {
-    var key = new Key(x.key, x.modifiers, x.cb)
-    key.enable()
-    self.keys.push(key)
-  })
+  disableSubShortcuts() {
+    this.keys.forEach((key) => key.disable())
+    this.keys = []
+  }
 
-}
-
-Shortcut.prototype.disableSubShortcuts = function () {
-  this.keys.forEach(function (key) {
-    key.disable()
-  })
-  this.keys = []
-}
-
-Shortcut.prototype.addSubShortcut = function (key, modifiers, cb) {
-  this.subShortcuts.push({key: key, modifiers: modifiers, cb: cb})
+  addSubShortcut(key, modifiers, cb) {
+    this.subShortcuts.push({ key, modifiers, cb })
+  }
 }
 
 // ------------------------------------------------------------------------------
 // Main shortcuts to activate `move` or `resize` mode.
 
-var arrows = [
-  '\n',
-  '↑\n',
-  '←    →\n',
-  '↓\n',
-  '\n',
-].join('')
+const arrows = '\n↑\n←    →\n↓\n\n'
 
 // Move mode.
-var moveMode = new Shortcut(
-  'up',
-  ['shift', 'ctrl', 'alt'],
-  [
-    'MOVE\n',
-    arrows,
-    'Hit esc to dismiss\n',
-    'Use no modifier key to move ' + INCREMENT_LOW + ' pixel.\n',
-    'Use the shift key to move ' + INCREMENT_MID + ' pixels.\n',
-    'Use the option key to move ' + INCREMENT_HIGH + ' pixels.\n',
-    'Use the cmd key to move to the edge of the screen.',
-  ].join('')
-)
+const moveMode = new Shortcut('up', ['shift', 'ctrl', 'alt'], `MOVE
+${arrows}Hit esc to dismiss
+Use no modifier key to move ${INCREMENT_LOW} pixel.
+Use the shift key to move ${INCREMENT_MID} pixels.
+Use the option key to move ${INCREMENT_HIGH} pixels.
+Use the cmd key to move to the edge of the screen.`)
 
 // Resize mode (from right/down).
-var resizeMode = new Shortcut(
-  'right',
-  ['shift', 'ctrl', 'alt'],
-  [
-    'RESIZE\n',
-    arrows,
-    'Hit esc to dismiss\n',
-    'Use no modifier key to resize ' + INCREMENT_LOW + ' pixel.\n',
-    'Use the shift key to resize ' + INCREMENT_MID + ' pixels.\n',
-    'Use the option key to resize ' + INCREMENT_HIGH + ' pixels.\n',
-    'Use the cmd key to resize to the edge of the screen.',
-  ].join('')
-)
+const resizeMode = new Shortcut('right', ['shift', 'ctrl', 'alt'], `RESIZE
+${arrows}Hit esc to dismiss
+Use no modifier key to resize ${INCREMENT_LOW} pixel.
+Use the shift key to resize ${INCREMENT_MID} pixels.
+Use the option key to resize ${INCREMENT_HIGH} pixels.
+Use the cmd key to resize to the edge of the screen.`)
 
 // ------------------------------------------------------------------------------
 // Resize.
 
-var resize = function (increment, direction) {
-  var window = Window.focused()
-  if (window) {
-    var size
-    switch (direction) {
-      case 'right':
-        size = { width: window.size().width + increment, height: window.size().height }
-        break
-      case 'left':
-        size = { width: window.size().width - increment, height: window.size().height }
-        break
-      case 'up':
-        size = { width: window.size().width, height: window.size().height - increment }
-        break
-      case 'down':
-        size = { width: window.size().width, height: window.size().height + increment }
-        break
-    }
-    window.setSize(size)
+const resize = withFocusedWindow((window, increment, direction) => {
+  const dimension = DIMENSIONS[AXES[direction]]
+  const size = window.size()
+  size[dimension] += increment * SIGNS[direction]
+  window.setSize(size)
+})
+
+const resizeToEdge = withFocusedWindow((window, direction) => {
+  const screenFrame = window.screen().flippedFrame()
+  const topLeft = window.topLeft()
+  const size = window.size()
+  const frames = {
+    right: {
+      x: topLeft.x,
+      y: topLeft.y,
+      width: screenFrame.width - Math.abs(screenFrame.x - topLeft.x),
+      height: size.height,
+    },
+    left: {
+      x: screenFrame.x,
+      y: topLeft.y,
+      width: Math.abs(screenFrame.x - topLeft.x) + size.width,
+      height: size.height,
+    },
+    up: {
+      x: topLeft.x,
+      y: screenFrame.y,
+      width: size.width,
+      height: Math.abs(window.screen().flippedVisibleFrame().y - topLeft.y) + size.height,
+    },
+    down: {
+      x: topLeft.x,
+      y: topLeft.y,
+      width: size.width,
+      height: screenFrame.height - Math.abs(screenFrame.y - topLeft.y),
+    },
   }
-}
-
-var resizeToEdge = function (direction) {
-  var window = Window.focused()
-  if (window) {
-    var frame
-    var screenFrame = window.screen().flippedFrame()
-    switch (direction) {
-      case 'right':
-        frame = {
-          x: window.topLeft().x,
-          y: window.topLeft().y,
-          width: screenFrame.width - Math.abs(screenFrame.x - window.topLeft().x),
-          height: window.size().height,
-        }
-        break
-      case 'left':
-        frame = {
-          x: screenFrame.x,
-          y: window.topLeft().y,
-          width: Math.abs(screenFrame.x - window.topLeft().x) + window.size().width,
-          height: window.size().height,
-        }
-        break
-      case 'up':
-        frame = {
-          x: window.topLeft().x,
-          y: screenFrame.y,
-          width: window.size().width,
-          height: Math.abs(window.screen().flippedVisibleFrame().y - window.topLeft().y) + window.size().height,
-        }
-        break
-      case 'down':
-        frame = {
-          x: window.topLeft().x,
-          y: window.topLeft().y,
-          width: window.size().width,
-          height: screenFrame.height - Math.abs(screenFrame.y - window.topLeft().y),
-        }
-        break
-    }
-    window.setFrame(frame)
-  }
-}
-
-resizeMode.addSubShortcut('right', [], function () { resize(INCREMENT_LOW, 'right') })
-resizeMode.addSubShortcut('left', [], function () { resize(INCREMENT_LOW, 'left') })
-resizeMode.addSubShortcut('up', [], function () { resize(INCREMENT_LOW, 'up') })
-resizeMode.addSubShortcut('down', [], function () { resize(INCREMENT_LOW, 'down') })
-
-resizeMode.addSubShortcut('right', ['shift'], function () { resize(INCREMENT_MID, 'right') })
-resizeMode.addSubShortcut('left', ['shift'], function () { resize(INCREMENT_MID, 'left') })
-resizeMode.addSubShortcut('up', ['shift'], function () { resize(INCREMENT_MID, 'up') })
-resizeMode.addSubShortcut('down', ['shift'], function () { resize(INCREMENT_MID, 'down') })
-
-resizeMode.addSubShortcut('right', ['alt'], function () { resize(INCREMENT_HIGH, 'right') })
-resizeMode.addSubShortcut('left', ['alt'], function () { resize(INCREMENT_HIGH, 'left') })
-resizeMode.addSubShortcut('up', ['alt'], function () { resize(INCREMENT_HIGH, 'up') })
-resizeMode.addSubShortcut('down', ['alt'], function () { resize(INCREMENT_HIGH, 'down') })
-
-resizeMode.addSubShortcut('right', ['cmd'], function () { resizeToEdge('right') })
-resizeMode.addSubShortcut('left', ['cmd'], function () { resizeToEdge('left') })
-resizeMode.addSubShortcut('up', ['cmd'], function () { resizeToEdge('up') })
-resizeMode.addSubShortcut('down', ['cmd'], function () { resizeToEdge('down') })
+  window.setFrame(frames[direction])
+})
 
 // ------------------------------------------------------------------------------
 // Move.
 
-var move = function (increment, direction) {
-  var window = Window.focused()
-  if (window) {
-    var coords
-    switch (direction) {
-      case 'right':
-        coords = { x: window.topLeft().x + increment, y: window.topLeft().y }
-        break
-      case 'left':
-        coords = { x: window.topLeft().x - increment, y: window.topLeft().y }
-        break
-      case 'up':
-        coords = { x: window.topLeft().x, y: window.topLeft().y - increment }
-        break
-      case 'down':
-        coords = { x: window.topLeft().x, y: window.topLeft().y + increment }
-        break
-    }
-    window.setTopLeft(coords)
-  }
-}
+const move = withFocusedWindow((window, increment, direction) => {
+  const topLeft = window.topLeft()
+  topLeft[AXES[direction]] += increment * SIGNS[direction]
+  window.setTopLeft(topLeft)
+})
 
-var moveToEdge = function (direction) {
-  var window = Window.focused()
-  if (window) {
-    var coords
-    var screenFrame = window.screen().flippedFrame()
-    switch (direction) {
-      case 'right':
-        coords = {
-          x: screenFrame.x + screenFrame.width - window.size().width,
-          y: window.topLeft().y,
-        }
-        break
-      case 'left':
-        coords = {
-          x: screenFrame.x,
-          y: window.topLeft().y,
-        }
-        break
-      case 'up':
-        coords = {
-          x: window.topLeft().x,
-          y: screenFrame.y,
-        }
-        break
-      case 'down':
-        coords = {
-          x: window.topLeft().x,
-          y: screenFrame.y + screenFrame.height - window.size().height,
-        }
-        break
-    }
-    window.setTopLeft(coords)
-  }
-}
+const moveToEdge = withFocusedWindow((window, direction) => {
+  const screenFrame = window.screen().flippedFrame()
+  const topLeft = window.topLeft()
+  const size = window.size()
+  const axis = AXES[direction]
+  const dimension = DIMENSIONS[axis]
+  topLeft[axis] =
+    SIGNS[direction] === 1 ? screenFrame[axis] + screenFrame[dimension] - size[dimension] : screenFrame[axis]
+  window.setTopLeft(topLeft)
+})
 
-moveMode.addSubShortcut('right', [], function () { move(INCREMENT_LOW, 'right') })
-moveMode.addSubShortcut('left', [], function () { move(INCREMENT_LOW, 'left') })
-moveMode.addSubShortcut('up', [], function () { move(INCREMENT_LOW, 'up') })
-moveMode.addSubShortcut('down', [], function () { move(INCREMENT_LOW, 'down') })
+// Register the low/mid/high increment shortcuts and the cmd-to-edge shortcut
+// for every direction, on both modes.
+const MODIFIER_INCREMENTS = [
+  { modifiers: [], increment: INCREMENT_LOW },
+  { modifiers: ['shift'], increment: INCREMENT_MID },
+  { modifiers: ['alt'], increment: INCREMENT_HIGH },
+]
 
-moveMode.addSubShortcut('right', ['shift'], function () { move(INCREMENT_MID, 'right') })
-moveMode.addSubShortcut('left', ['shift'], function () { move(INCREMENT_MID, 'left') })
-moveMode.addSubShortcut('up', ['shift'], function () { move(INCREMENT_MID, 'up') })
-moveMode.addSubShortcut('down', ['shift'], function () { move(INCREMENT_MID, 'down') })
-
-moveMode.addSubShortcut('right', ['alt'], function () { move(INCREMENT_HIGH, 'right') })
-moveMode.addSubShortcut('left', ['alt'], function () { move(INCREMENT_HIGH, 'left') })
-moveMode.addSubShortcut('up', ['alt'], function () { move(INCREMENT_HIGH, 'up') })
-moveMode.addSubShortcut('down', ['alt'], function () { move(INCREMENT_HIGH, 'down') })
-
-moveMode.addSubShortcut('right', ['cmd'], function () { moveToEdge('right') })
-moveMode.addSubShortcut('left', ['cmd'], function () { moveToEdge('left') })
-moveMode.addSubShortcut('up', ['cmd'], function () { moveToEdge('up') })
-moveMode.addSubShortcut('down', ['cmd'], function () { moveToEdge('down') })
+DIRECTIONS.forEach((direction) => {
+  MODIFIER_INCREMENTS.forEach(({ modifiers, increment }) => {
+    resizeMode.addSubShortcut(direction, modifiers, () => resize(increment, direction))
+    moveMode.addSubShortcut(direction, modifiers, () => move(increment, direction))
+  })
+  resizeMode.addSubShortcut(direction, ['cmd'], () => resizeToEdge(direction))
+  moveMode.addSubShortcut(direction, ['cmd'], () => moveToEdge(direction))
+})
 
 // ------------------------------------------------------------------------------
 // Custom size/position shortcuts.
 
-var maximise = function () {
-  var window = Window.focused()
-  if (window) {
-    window.maximise()
-  }
-}
+const maximise = withFocusedWindow((window) => window.maximise())
 
-var center = function () {
-  var window = Window.focused()
-  if (window) {
-    var screenFrame = window.screen().flippedVisibleFrame()
-    window.setTopLeft({
-      x: parseInt(screenFrame.x + ((screenFrame.width - window.size().width) / 2)),
-      y: parseInt(screenFrame.y + ((screenFrame.height - window.size().height) / 2)),
-    })
-  }
-}
+const center = withFocusedWindow((window) => {
+  const screenFrame = window.screen().flippedVisibleFrame()
+  window.setTopLeft({
+    x: Math.trunc(screenFrame.x + (screenFrame.width - window.size().width) / 2),
+    y: Math.trunc(screenFrame.y + (screenFrame.height - window.size().height) / 2),
+  })
+})
 
 // Move and resize the window to the left half of the screen.
-var half = function () {
-  var window = Window.focused()
-  if (window) {
-    var screenFrame = window.screen().flippedFrame()
-    window.setFrame({
-      x: screenFrame.x,
-      y: screenFrame.y,
-      width: parseInt(screenFrame.width / 2),
-      height: screenFrame.height,
-    })
-  }
-}
-
-resizeMode.addSubShortcut('m', [], maximise)
-resizeMode.addSubShortcut('=', [], center)
-resizeMode.addSubShortcut('h', [], half)
-
-moveMode.addSubShortcut('m', [], maximise)
-moveMode.addSubShortcut('=', [], center)
-moveMode.addSubShortcut('h', [], half)
+const half = withFocusedWindow((window) => {
+  const screenFrame = window.screen().flippedFrame()
+  window.setFrame({
+    x: screenFrame.x,
+    y: screenFrame.y,
+    width: Math.trunc(screenFrame.width / 2),
+    height: screenFrame.height,
+  })
+})
 
 // ------------------------------------------------------------------------------
 // The following are personal custom shortcuts which are heavily dependent
 // on my current screen resolutions and sizes.
 
 // Safari size/position.
-var customShortcut1 = function () {
-  var window = Window.focused()
-  if (window) {
-    var screenFrame = window.screen().flippedVisibleFrame()
-    window.setFrame({
-      x: screenFrame.x + EXTRA_SPACE,
-      y: screenFrame.y + EXTRA_SPACE,
-      width: 1400,
-      height: 900,
-    })
-  }
-}
+const safariSize = withFocusedWindow((window) => {
+  const screenFrame = window.screen().flippedVisibleFrame()
+  window.setFrame({
+    x: screenFrame.x + EXTRA_SPACE,
+    y: screenFrame.y + EXTRA_SPACE,
+    width: 1400,
+    height: 900,
+  })
+})
 
 // Safari (external monitor) size/position.
-var customShortcut2 = function () {
-  var window = Window.focused()
-  if (window) {
-    var screenFrame = window.screen().flippedVisibleFrame()
-    window.setFrame({
-      x: screenFrame.x + EXTRA_SPACE,
-      y: screenFrame.y + EXTRA_SPACE,
-      width: 2200,
-      height: 1400,
-    })
-  }
-}
+const safariExternalMonitorSize = withFocusedWindow((window) => {
+  const screenFrame = window.screen().flippedVisibleFrame()
+  window.setFrame({
+    x: screenFrame.x + EXTRA_SPACE,
+    y: screenFrame.y + EXTRA_SPACE,
+    width: 2200,
+    height: 1400,
+  })
+})
 
 // Terminal position.
-var customShortcut3 = function () {
-  var window = Window.focused()
-  if (window) {
-    var screenFrame = window.screen().flippedVisibleFrame()
-    window.setTopLeft({
-      x: screenFrame.x + EXTRA_SPACE,
-      y: screenFrame.y + EXTRA_SPACE,
-    })
-  }
-}
+const terminalPosition = withFocusedWindow((window) => {
+  const screenFrame = window.screen().flippedVisibleFrame()
+  window.setTopLeft({
+    x: screenFrame.x + EXTRA_SPACE,
+    y: screenFrame.y + EXTRA_SPACE,
+  })
+})
 
-resizeMode.addSubShortcut('s', [], customShortcut1)
-resizeMode.addSubShortcut('f', [], customShortcut2)
-resizeMode.addSubShortcut('t', [], customShortcut3)
+const sharedSubShortcuts = [
+  ['m', maximise],
+  ['=', center],
+  ['h', half],
+  ['s', safariSize],
+  ['f', safariExternalMonitorSize],
+  ['t', terminalPosition],
+]
 
-moveMode.addSubShortcut('s', [], customShortcut1)
-moveMode.addSubShortcut('f', [], customShortcut2)
-moveMode.addSubShortcut('t', [], customShortcut3)
+sharedSubShortcuts.forEach(([key, cb]) => {
+  resizeMode.addSubShortcut(key, [], cb)
+  moveMode.addSubShortcut(key, [], cb)
+})
